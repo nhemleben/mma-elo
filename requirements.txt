@@ -1,0 +1,5 @@
+wikipedia
+beautifulsoup4
+numpy
+requests
+matplotlib

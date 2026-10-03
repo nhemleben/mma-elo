@@ -1,9 +1,13 @@
-from wikitables import import_tables
 import wikipedia
 from bs4 import BeautifulSoup
 import re
 import numpy as np
 import unicodedata
+import requests
+from urllib.parse import unquote, urlparse
+
+
+USER_AGENT = "mma-elo scraper (https://github.com/)"
 
 
 def clean(string):
@@ -60,22 +64,29 @@ def extract_results(html):
 def find_event_links():
     """Find url links to all events"""
 
-    events = import_tables("List of UFC events")[1]
+    wikipedia.set_user_agent(USER_AGENT)
+    response = requests.get(
+        "https://en.wikipedia.org/wiki/List_of_UFC_events",
+        headers={"User-Agent": USER_AGENT},
+        timeout=30,
+    )
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
+    events_table = next(
+        table for table in soup.find_all("table")
+        if {header.get_text(strip=True) for header in table.find_all("th")}
+        >= {"#", "Event"}
+    )
+
     event_links = []
-    for event in events.rows:
-        name = str(event["Event"])
-        # Wikipedia markup links are either [link] or [link|text]
-        link = re.findall(r"\[\[(.*?)\|", name)
-        if (link):
-            event_links.append(link[0])
-            continue
-
-        link = re.findall(r"\[\[(.*?)\]\]", name)
-        if (link):
-            event_links.append(link[0])
-            continue
-
-        event_links.append(name)
+    for row in events_table.find_all("tr"):
+        cells = row.find_all("td")
+        event = cells[1] if len(cells) > 1 else None
+        link = event.find("a", href=True) if event else None
+        if link:
+            event_path = urlparse(str(link["href"])).path
+            event_name = unquote(event_path.removeprefix("/wiki/")).replace("_", " ")
+            event_links.append(event_name)
 
     return event_links
 

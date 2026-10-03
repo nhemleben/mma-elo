@@ -113,3 +113,16 @@ using python's BeautifulSoup for scraping).
 
 To update the full rankings, which are saved to the `rankings.txt` file,
 uncomment the last line in `mma.r`.
+
+4. View a fighter's career Elo
+
+Run `Rscript fighter_elo.R "Fighter Name"` to save a PNG chart of a fighter's
+Elo rating after every bout. For example, `Rscript fighter_elo.R "Georges St-Pierre"`.
+The chart is saved in the current directory; an optional second argument sets
+the output filename.
+
+5. Plot the top fighters' career Elo
+
+Run `python top_fighters_elo.py --top 10` to save one combined plot and a CSV
+containing each selected fighter's Elo after every bout. The top N fighters are
+selected by their current Elo. Use `--csv` and `--plot` to choose output paths.
